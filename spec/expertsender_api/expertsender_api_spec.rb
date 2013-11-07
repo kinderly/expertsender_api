@@ -1,13 +1,12 @@
 require 'spec_helper'
 
 describe ExpertSenderApi::API do
+  let(:api_key) { "123-us1" }
   let(:api_endpoint) { 'https://api2.esv2.com' }
-  let(:subscriber_attributes) { { list_id: 52, email: "test@httplab.ru" } }
+  let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
   let(:subscribers) { [ExpertSenderApi::Subscriber.new(subscriber_attributes)] }
 
   describe "attributes" do
-    let(:api_key) { "123-us1" }
-
     it "have no API key by default" do
       having_env('EXPERTSENDER_API_KEY', nil) { @expertsender = ExpertSenderApi::API.new }
       expect(@expertsender.api_key).to be_nil
@@ -68,11 +67,36 @@ describe ExpertSenderApi::API do
   end
 
   context 'when configured properly' do
-    subject { ExpertSenderApi::API.new api_endpoint: api_endpoint, throws_exceptions: true }
+    subject { ExpertSenderApi::API.new key: api_key, api_endpoint: api_endpoint }
 
-    its '#add_subscribers_to_list returns success response' do
-      response = subject.add_subscribers_to_list(subscribers)
-      response.xpath('//ErrorMessage').should be_empty
+    its '#add_subscribers_to_list calls post with correct body' do
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest {
+          xml.ApiKey api_key
+          xml.MultiData {
+            subscribers.each { |subscriber| subscriber.insert_to(xml) }
+          }
+        }
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+
+      expect_post("#{api_endpoint}/Api/Subscribers", xml)
+      subject.add_subscribers_to_list(subscribers)
+    end
+
+    its '#remove_subscriber_from_list by id calls delete with correct parameters' do
+      expected_params = { apiKey: api_key, listId: subscriber_attributes[:list_id] }
+      expect_delete("#{api_endpoint}/Api/Subscribers/#{subscriber_attributes[:id]}", expected_params)
+
+      subject.remove_subscriber_from_list(id: subscriber_attributes[:id], listId: subscriber_attributes[:list_id])
+    end
+
+    its '#remove_subscriber_from_list by email returns success response' do
+      expected_params = { apiKey: api_key, email: subscriber_attributes[:email], listId: subscriber_attributes[:list_id] }
+      expect_delete("#{api_endpoint}/Api/Subscribers", expected_params)
+
+      subject.remove_subscriber_from_list(email: subscriber_attributes[:email], listId: subscriber_attributes[:list_id])
     end
   end
 
@@ -91,6 +115,20 @@ describe ExpertSenderApi::API do
     ENV[key] = value
     yield
     ENV[key] = prev_value
+  end
+
+  def expect_post(expected_url, expected_body)
+    ExpertSenderApi::API.should_receive(:post).with do |url, opts|
+      expect(url).to eq expected_url
+      expect(expected_body).to eq opts[:body]
+    end.and_return(Struct.new(:body).new(nil))
+  end
+
+  def expect_delete(expected_url, expected_params)
+    ExpertSenderApi::API.should_receive(:delete).with do |url, opts|
+      expect(url).to eq expected_url
+      expect(expected_params).to eq opts[:query]
+    end.and_return(Struct.new(:body).new(nil))
   end
 end
 
