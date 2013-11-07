@@ -21,6 +21,10 @@ module ExpertSenderApi
       @subscribers_url = api_endpoint.concat('/Api/Subscribers') unless api_endpoint.nil?
     end
 
+    def add_subscriber_to_list(subscriber)
+      add_subscribers_to_list([subscriber])
+    end
+
     def add_subscribers_to_list(subscribers)
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.ApiRequest {
