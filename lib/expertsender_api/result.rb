@@ -1,6 +1,6 @@
 module ExpertSenderApi
   class Result
-    attr_accessor :response, :parsed_response, :error_code, :error_message
+    attr_reader :response, :parsed_response, :error_code, :error_message
 
     def initialize(response)
       @response = response
