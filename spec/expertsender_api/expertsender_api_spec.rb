@@ -5,6 +5,7 @@ describe ExpertSenderApi::API do
   let(:api_endpoint) { 'https://api2.esv2.com' }
   let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
   let(:subscribers) { [ExpertSenderApi::Subscriber.new(subscriber_attributes)] }
+  let(:subscribers_url) { "#{api_endpoint}/Api/Subscribers" }
 
   describe "attributes" do
     it "have no API key by default" do
@@ -81,22 +82,34 @@ describe ExpertSenderApi::API do
 
       xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
 
-      expect_post("#{api_endpoint}/Api/Subscribers", xml)
+      expect_post(subscribers_url, xml)
       subject.add_subscribers_to_list(subscribers)
     end
 
     its '#remove_subscriber_from_list by id calls delete with correct parameters' do
-      expected_params = { apiKey: api_key, listId: subscriber_attributes[:list_id] }
-      expect_delete("#{api_endpoint}/Api/Subscribers/#{subscriber_attributes[:id]}", expected_params)
+      expected_params = { apiKey: api_key,
+                          listId: subscriber_attributes[:list_id] }
+      expect_delete("#{subscribers_url}/#{subscriber_attributes[:id]}", expected_params)
 
       subject.remove_subscriber_from_list(id: subscriber_attributes[:id], listId: subscriber_attributes[:list_id])
     end
 
     its '#remove_subscriber_from_list by email returns success response' do
-      expected_params = { apiKey: api_key, email: subscriber_attributes[:email], listId: subscriber_attributes[:list_id] }
-      expect_delete("#{api_endpoint}/Api/Subscribers", expected_params)
+      expected_params = { apiKey: api_key,
+                          email: subscriber_attributes[:email],
+                          listId: subscriber_attributes[:list_id] }
+      expect_delete(subscribers_url, expected_params)
 
       subject.remove_subscriber_from_list(email: subscriber_attributes[:email], listId: subscriber_attributes[:list_id])
+    end
+
+    its '#get_subscriber_info calls get with correct parameters' do
+      expected_params = { apiKey: api_key,
+                          email: subscriber_attributes[:email],
+                          option: ExpertSenderApi::API::SUBSCRIBER_INFO_OPTION_FULL }
+      expect_get(subscribers_url, expected_params)
+
+      subject.get_subscriber_info(email: subscriber_attributes[:email])
     end
   end
 
@@ -115,6 +128,13 @@ describe ExpertSenderApi::API do
     ENV[key] = value
     yield
     ENV[key] = prev_value
+  end
+
+  def expect_get(expected_url, expected_params)
+    ExpertSenderApi::API.should_receive(:get).with do |url, opts|
+      expect(url).to eq expected_url
+      expect(expected_params).to eq opts[:query]
+    end.and_return(Struct.new(:body).new(nil))
   end
 
   def expect_post(expected_url, expected_body)

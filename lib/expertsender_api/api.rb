@@ -1,4 +1,5 @@
 require 'expertsender_api/subscriber'
+require 'expertsender_api/result'
 require 'expertsender_api/expertsender_error'
 
 module ExpertSenderApi
@@ -10,6 +11,10 @@ module ExpertSenderApi
     end
 
     attr_accessor :api_key, :api_endpoint, :throws_exceptions
+
+    SUBSCRIBER_INFO_OPTION_SHORT = 1
+    SUBSCRIBER_INFO_OPTION_MEDIUM = 2
+    SUBSCRIBER_INFO_OPTION_FULL = 3
 
     def initialize(key: nil, **parameters)
       @api_key = key || self.class.api_key || ENV['EXPERTSENDER_API_KEY']
@@ -50,29 +55,45 @@ module ExpertSenderApi
       handle_response(response)
     end
 
+    def get_subscriber_info(option: SUBSCRIBER_INFO_OPTION_FULL, email: nil)
+      params = { apiKey: api_key, email: email, option: option }
+
+      response = self.class.get(@subscribers_url, query: params)
+
+      handle_response(response)
+    end
+
+    def update_subscriber_email(email, new_email)
+      info = get_subscriber_info(email: email)
+
+      return info if info.failed?
+
+      expertsender_id = info.parsed_response.xpath('//Data/Id').text
+      list_ids = info.parsed_response.xpath('//StateOnList/ListId').map(&:text)
+
+      list_ids.each do |list_id|
+        add_subscriber_to_list(Subscriber.new list_id: list_id,
+                                              id: expertsender_id,
+                                              email: new_email)
+      end
+    end
+
     private
 
     def handle_response(response)
-      parsed_response = nil
+      result = Result.new(response)
 
-      if (response.body)
-        parsed_response = Nokogiri::XML(response.body)
-
-        if should_raise_for_response?(parsed_response)
-          message = parsed_response.xpath('//ErrorMessage/Message').text
-          code = parsed_response.xpath('//ErrorMessage/Code').text
-
-          error = ExpertSenderError.new("ExpertSender API Error: #{message} (code #{code})")
-          error.code = code
-          raise error
-        end
+      if should_raise_for_response?(result)
+        error = ExpertSenderError.new("ExpertSender API Error: #{result.error_message} (code #{result.error_code})")
+        error.code = result.error_code
+        raise error
       end
 
-      parsed_response
+      result
     end
 
-    def should_raise_for_response?(response)
-      @throws_exceptions && response.xpath('//ErrorMessage').any?
+    def should_raise_for_response?(result)
+      @throws_exceptions and result.failed?
     end
 
     def remove_subscriber_by_email(email, options = {})
