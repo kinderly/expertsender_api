@@ -78,6 +78,10 @@ module ExpertSenderApi
       end
     end
 
+    def create_and_send_email(options)
+
+    end
+
     private
 
     def handle_response(response)

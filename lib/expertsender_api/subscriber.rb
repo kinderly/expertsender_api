@@ -1,5 +1,9 @@
+require 'expertsender_api/concerns/serializeable'
+
 module ExpertSenderApi
   class Subscriber
+    include Serializeable
+
     MODE_ADD_AND_UPDATE = 'AddAndUpdate'
     MODE_ADD_AND_REPLACE = 'AddAndReplace'
     MODE_ADD_AND_IGNORE = 'AddAndIgnore'
@@ -27,18 +31,6 @@ module ExpertSenderApi
           xml.send(attr[:name], attr[:value]) unless attr[:value].nil?
         end
       }
-    end
-
-    private
-
-    def attributes
-      instance_variables.map do |ivar|
-        { name: camel_case(ivar.to_s[1..-1]), value: instance_variable_get(ivar) }
-      end
-    end
-
-    def camel_case(str)
-      str.split(/[\W_]/).map {|c| c.capitalize}.join
     end
   end
 end
