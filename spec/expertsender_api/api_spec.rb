@@ -19,8 +19,14 @@ describe ExpertSenderApi::API do
                                subject: 'Subject test',
                                plain: 'Plain Test Content' } }
 
-  let(:newsletters_url) { "#{api_endpoint}/Api/Newsletters" }
+  let(:receiver) { ExpertSenderApi::Email::Receiver.new(receiver_attributes) }
+  let(:receiver_attributes) { { id: 123,
+                                email: 'test@test.ru',
+                                list_id: 53 } }
 
+  let(:snippets) { [ExpertSenderApi::Email::Snippet.new(snippet_attributes)] }
+  let(:snippet_attributes) { { name: 'Test snippet name',
+                               value: 'Test snippet value' } }
   describe "attributes" do
     it "have no API key by default" do
       having_env('EXPERTSENDER_API_KEY', nil) { @expertsender = ExpertSenderApi::API.new }
@@ -140,8 +146,33 @@ describe ExpertSenderApi::API do
 
       xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
 
-      expect_post(newsletters_url, xml)
+      expect_post("#{api_endpoint}/Api/Newsletters", xml)
       subject.create_and_send_email(recipients: recipients, content: content)
+    end
+
+    its '#send_transaction_email' do
+      letter_id = 93
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest {
+          xml.ApiKey api_key
+          xml.Data {
+            receiver.insert_to xml
+            if snippets.any?
+              xml.Snippets {
+                snippets.each { |snippet| snippet.insert_to(xml) }
+              }
+            end
+          }
+        }
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+
+      expect_post("#{api_endpoint}/Api/Transactionals/#{letter_id}", xml)
+      subject.send_transaction_email(letter_id: letter_id,
+                                     receiver: receiver,
+                                     snippets: snippets)
     end
   end
 

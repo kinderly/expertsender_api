@@ -1,5 +1,3 @@
-require 'expertsender_api/email'
-
 module ExpertSenderApi::Email
   class Recipients
     attr_accessor :subscriber_lists

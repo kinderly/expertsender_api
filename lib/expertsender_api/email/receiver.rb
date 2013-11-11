@@ -1,16 +1,14 @@
 module ExpertSenderApi::Email
-  class Content
+  class Receiver
     include ::ExpertSenderApi::Serializeable
-
-    attr_accessor :from_name, :from_email, :reply_to_name, :reply_to_email,
-                  :subject, :html, :plain
+    attr_accessor :id, :email, :list_id
 
     def initialize(parameters = {})
       parameters.each { |key, value| send("#{key}=", value) }
     end
 
     def insert_to(xml)
-      xml.Content {
+      xml.Receiver {
         attributes.each do |attr|
           xml.send(attr[:name], attr[:value]) unless attr[:value].nil?
         end
@@ -18,6 +16,7 @@ module ExpertSenderApi::Email
     end
   end
 end
+
 
 
 

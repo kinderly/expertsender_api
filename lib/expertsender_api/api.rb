@@ -1,9 +1,3 @@
-require 'expertsender_api/subscriber'
-require 'expertsender_api/email/recipients'
-require 'expertsender_api/email/content'
-require 'expertsender_api/result'
-require 'expertsender_api/expertsender_error'
-
 module ExpertSenderApi
   class API
     include HTTParty
@@ -28,6 +22,7 @@ module ExpertSenderApi
       unless api_endpoint.nil?
         @subscribers_url = api_endpoint + '/Api/Subscribers'
         @newsletters_url = api_endpoint + '/Api/Newsletters'
+        @transactionals_url = api_endpoint + '/Api/Transactionals'
       end
     end
 
@@ -77,7 +72,8 @@ module ExpertSenderApi
       list_ids = info.parsed_response.xpath('//StateOnList/ListId').map(&:text)
 
       list_ids.each do |list_id|
-        add_subscriber_to_list(Subscriber.new list_id: list_id,
+        add_subscriber_to_list(Subscriber.new mode: Subscriber::MODE_ADD_AND_UPDATE,
+                                              list_id: list_id,
                                               id: expertsender_id,
                                               email: new_email)
       end
@@ -99,6 +95,31 @@ module ExpertSenderApi
 
       xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
       response = self.class.post(@newsletters_url, body: xml)
+
+      handle_response(response)
+    end
+
+    def send_transaction_email(options)
+      letter_id = options.delete :letter_id
+      receiver = options.delete :receiver
+      snippets = options.delete :snippets
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest {
+          xml.ApiKey api_key
+          xml.Data {
+            receiver.insert_to xml
+            if snippets.any?
+              xml.Snippets {
+                snippets.each { |snippet| snippet.insert_to(xml) }
+              }
+            end
+          }
+        }
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+      response = self.class.post("#{@transactionals_url}/#{letter_id}", body: xml)
 
       handle_response(response)
     end

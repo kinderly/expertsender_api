@@ -1,8 +1,6 @@
-require 'expertsender_api/concerns/serializeable'
-
 module ExpertSenderApi
   class Subscriber
-    include Serializeable
+    include ::ExpertSenderApi::Serializeable
 
     MODE_ADD_AND_UPDATE = 'AddAndUpdate'
     MODE_ADD_AND_REPLACE = 'AddAndReplace'
