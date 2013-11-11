@@ -1,4 +1,6 @@
 require 'expertsender_api/subscriber'
+require 'expertsender_api/email/recipients'
+require 'expertsender_api/email/content'
 require 'expertsender_api/result'
 require 'expertsender_api/expertsender_error'
 
@@ -23,7 +25,10 @@ module ExpertSenderApi
       @throws_exceptions = parameters.has_key?(:throws_exceptions) ? parameters.delete(:throws_exceptions) : self.class.throws_exceptions
       @api_endpoint = parameters.delete(:api_endpoint) || self.class.api_endpoint
 
-      @subscribers_url = api_endpoint.concat('/Api/Subscribers') unless api_endpoint.nil?
+      unless api_endpoint.nil?
+        @subscribers_url = api_endpoint + '/Api/Subscribers'
+        @newsletters_url = api_endpoint + '/Api/Newsletters'
+      end
     end
 
     def add_subscriber_to_list(subscriber)
@@ -79,7 +84,23 @@ module ExpertSenderApi
     end
 
     def create_and_send_email(options)
+      recipients = options.delete :recipients
+      content = options.delete :content
 
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest {
+          xml.ApiKey api_key
+          xml.Data {
+            recipients.insert_to xml
+            content.insert_to xml
+          }
+        }
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+      response = self.class.post(@newsletters_url, body: xml)
+
+      handle_response(response)
     end
 
     private

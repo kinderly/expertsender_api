@@ -1,5 +1,7 @@
+require 'expertsender_api/email'
+
 module ExpertSenderApi::Email
-  class Recepients
+  class Recipients
     attr_accessor :subscriber_lists
 
     def initialize(subscriber_lists: [])
@@ -7,7 +9,7 @@ module ExpertSenderApi::Email
     end
 
     def insert_to(xml)
-      xml.Recepients {
+      xml.Recipients {
         if subscriber_lists.any?
           xml.SubscriberLists {
             subscriber_lists.each do |list_id|

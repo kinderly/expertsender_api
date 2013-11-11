@@ -3,9 +3,23 @@ require 'spec_helper'
 describe ExpertSenderApi::API do
   let(:api_key) { "123-us1" }
   let(:api_endpoint) { 'https://api2.esv2.com' }
-  let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
+
   let(:subscribers) { [ExpertSenderApi::Subscriber.new(subscriber_attributes)] }
+  let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
   let(:subscribers_url) { "#{api_endpoint}/Api/Subscribers" }
+
+  let(:recipients) { ExpertSenderApi::Email::Recipients.new(recipients_attributes) }
+  let(:recipients_attributes) { { subscriber_lists: [52, 53] } }
+
+  let(:content) { ExpertSenderApi::Email::Content.new(content_attributes) }
+  let(:content_attributes) { { from_name: 'From Name Test',
+                               from_email: 'test@httplab.ru',
+                               reply_to_name: 'Reply To Name Test',
+                               reply_to_email: 'Reply To Email Test',
+                               subject: 'Subject test',
+                               plain: 'Plain Test Content' } }
+
+  let(:newsletters_url) { "#{api_endpoint}/Api/Newsletters" }
 
   describe "attributes" do
     it "have no API key by default" do
@@ -110,6 +124,24 @@ describe ExpertSenderApi::API do
       expect_get(subscribers_url, expected_params)
 
       subject.get_subscriber_info(email: subscriber_attributes[:email])
+    end
+
+    its '#create_and_send_email calls post with correct body' do
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest {
+          xml.ApiKey api_key
+          xml.Data {
+            recipients.insert_to xml
+            content.insert_to xml
+          }
+        }
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+
+      expect_post(newsletters_url, xml)
+      subject.create_and_send_email(recipients: recipients, content: content)
     end
   end
 
