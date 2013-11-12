@@ -21,6 +21,7 @@ module ExpertSenderApi
 
       unless api_endpoint.nil?
         @subscribers_url = api_endpoint + '/Api/Subscribers'
+        @removed_subscribers_url = api_endpoint + '/Api/RemovedSubscribers'
         @newsletters_url = api_endpoint + '/Api/Newsletters'
         @transactionals_url = api_endpoint + '/Api/Transactionals'
       end
@@ -120,6 +121,24 @@ module ExpertSenderApi
 
       xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
       response = self.class.post("#{@transactionals_url}/#{letter_id}", body: xml)
+
+      handle_response(response)
+    end
+
+    def get_deleted_subscribers(options = {})
+      params = { apiKey: api_key }
+
+      list_ids =  options[:list_ids]
+      remove_types =  options[:remove_types]
+      start_date = options[:start_date]
+      end_date = options[:end_date]
+
+      params[:listIds] = list_ids.join(',') if list_ids.respond_to?(:any?)
+      params[:removeTypes] = remove_types.join(',') if remove_types.respond_to?(:any?)
+      params[:startDate] = start_date.to_s unless start_date.nil?
+      params[:endDate] = end_date.to_s unless end_date.nil?
+
+      response = self.class.get(@removed_subscribers_url, query: params)
 
       handle_response(response)
     end

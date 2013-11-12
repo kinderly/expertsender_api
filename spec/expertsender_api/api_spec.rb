@@ -174,6 +174,21 @@ describe ExpertSenderApi::API do
                                      receiver: receiver,
                                      snippets: snippets)
     end
+
+    its '#get_deleted_subscribers calls get with correct parameters' do
+      expected_params = { apiKey: api_key,
+                          listIds: '52,53',
+                          removeTypes: 'OptOutLink,Compliant,Ui',
+                          startDate: Date.today.to_s,
+                          endDate: Date.new(2090, 1, 1).to_s }
+
+      expect_get("#{api_endpoint}/Api/RemovedSubscribers", expected_params)
+
+      subject.get_deleted_subscribers(list_ids: [52, 53],
+                                      remove_types: ['OptOutLink', 'Compliant', 'Ui'],
+                                      start_date: Date.today,
+                                      end_date: Date.new(2090, 1, 1))
+    end
   end
 
   context 'when has wrong api key' do
