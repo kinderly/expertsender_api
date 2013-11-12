@@ -4,7 +4,7 @@ describe ExpertSenderApi::API do
   let(:api_key) { "123-us1" }
   let(:api_endpoint) { 'https://api2.esv2.com' }
 
-  let(:subscribers) { [ExpertSenderApi::Subscriber.new(subscriber_attributes)] }
+  let(:subscribers) { [ExpertSenderApi::Subscriber::Tag.new(subscriber_attributes)] }
   let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
   let(:subscribers_url) { "#{api_endpoint}/Api/Subscribers" }
 

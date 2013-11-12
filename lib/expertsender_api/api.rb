@@ -72,10 +72,10 @@ module ExpertSenderApi
       list_ids = info.parsed_response.xpath('//StateOnList/ListId').map(&:text)
 
       list_ids.each do |list_id|
-        add_subscriber_to_list(Subscriber.new mode: Subscriber::MODE_ADD_AND_UPDATE,
-                                              list_id: list_id,
-                                              id: expertsender_id,
-                                              email: new_email)
+        add_subscriber_to_list(Subscriber::Tag.new mode: Subscriber::MODE_ADD_AND_UPDATE,
+                                                   list_id: list_id,
+                                                   id: expertsender_id,
+                                                   email: new_email)
       end
     end
 

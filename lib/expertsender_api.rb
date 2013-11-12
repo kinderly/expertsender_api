@@ -6,6 +6,8 @@ require 'expertsender_api/email'
 require 'expertsender_api/concerns/serializeable'
 
 require 'expertsender_api/subscriber'
+require 'expertsender_api/subscriber/tag'
+require 'expertsender_api/subscriber/property'
 require 'expertsender_api/email/recipients'
 require 'expertsender_api/email/receiver'
 require 'expertsender_api/email/content'
