@@ -18,11 +18,19 @@ module ExpertSenderApi
     end
 
     def success?
-      error_code.nil? and error_message.nil?
+      status_success? and
+      error_code.nil? and
+      error_message.nil?
     end
 
     def failed?
       not success?
+    end
+
+    def status_success?
+      response.code == 200 or
+      response.code == 201 or
+      response.code == 202
     end
   end
 end
