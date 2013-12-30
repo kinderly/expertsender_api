@@ -36,6 +36,12 @@ module ExpertSenderApi::Subscriber
         end
       }
     end
+
+    private
+
+    def variables_to_serialize
+      instance_variables.select { |var| var != :@properties }
+    end
   end
 end
 

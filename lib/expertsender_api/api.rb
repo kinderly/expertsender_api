@@ -12,6 +12,9 @@ module ExpertSenderApi
     SUBSCRIBER_INFO_OPTION_MEDIUM = 2
     SUBSCRIBER_INFO_OPTION_FULL = 3
 
+    XML_NAMESPACES = { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+                       'xmlns:xs' => 'http://www.w3.org/2001/XMLSchema' }
+
     def initialize(key: nil, **parameters)
       @api_key = key || self.class.api_key || ENV['EXPERTSENDER_API_KEY']
       @api_key = @api_key.strip if @api_key
@@ -33,7 +36,7 @@ module ExpertSenderApi
 
     def add_subscribers_to_list(subscribers)
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.MultiData {
             subscribers.each { |subscriber| subscriber.insert_to(xml) }
@@ -64,20 +67,31 @@ module ExpertSenderApi
       handle_response(response)
     end
 
-    def update_subscriber_email(email, new_email)
-      info = get_subscriber_info(email: email)
+    def update_subscriber(email, subscriber)
+      result = get_subscriber_info(email: email)
 
-      return info if info.failed?
+      return result if result.failed?
 
-      expertsender_id = info.parsed_response.xpath('//Data/Id').text
-      list_ids = info.parsed_response.xpath('//StateOnList/ListId').map(&:text)
+      expertsender_id = result.parsed_response.xpath('//Data/Id').text
+      list_ids = result.parsed_response.xpath('//StateOnList/ListId').map(&:text)
+
+      subscriber.mode = Subscriber::Tag::MODE_ADD_AND_UPDATE
+      subscriber.id = expertsender_id
 
       list_ids.each do |list_id|
-        add_subscriber_to_list(Subscriber::Tag.new mode: Subscriber::MODE_ADD_AND_UPDATE,
-                                                   list_id: list_id,
-                                                   id: expertsender_id,
-                                                   email: new_email)
+        subscriber.list_id = list_id
+        res = add_subscriber_to_list(subscriber)
       end
+
+      result
+    end
+
+    def add_or_update_subscriber(email, subscriber)
+      result = update_subscriber(email, subscriber)
+
+      return add_subscriber_to_list(subscriber) if result.failed?
+
+      result
     end
 
     def create_and_send_email(options)
@@ -85,7 +99,7 @@ module ExpertSenderApi
       content = options.delete :content
 
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.Data {
             recipients.insert_to xml
@@ -106,7 +120,7 @@ module ExpertSenderApi
       snippets = options.delete :snippets
 
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.Data {
             receiver.insert_to xml
