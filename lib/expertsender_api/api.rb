@@ -75,7 +75,6 @@ module ExpertSenderApi
       expertsender_id = result.parsed_response.xpath('//Data/Id').text
       list_ids = result.parsed_response.xpath('//StateOnList/ListId').map(&:text)
 
-      subscriber.mode = Subscriber::Tag::MODE_ADD_AND_UPDATE
       subscriber.id = expertsender_id
 
       list_ids.each do |list_id|
