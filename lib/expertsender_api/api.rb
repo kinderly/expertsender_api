@@ -77,20 +77,14 @@ module ExpertSenderApi
 
       subscriber.id = expertsender_id
 
+      result = add_subscriber_to_list(subscriber)
+      return result if result.failed?
+
       list_ids.each do |list_id|
         subscriber.list_id = list_id
-        res = add_subscriber_to_list(subscriber)
+        result = add_subscriber_to_list(subscriber)
+        return result if result.failed?
       end
-
-      result
-    end
-
-    def add_or_update_subscriber(email, subscriber)
-      result = update_subscriber(email, subscriber)
-
-      return add_subscriber_to_list(subscriber) if result.failed?
-
-      result
     end
 
     def create_and_send_email(options)

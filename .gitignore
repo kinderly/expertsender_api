@@ -9,6 +9,7 @@
 /Gemfile.lock
 /gems
 /tags
+/vendor/bundle
 
 *.swp
 .ruby-version

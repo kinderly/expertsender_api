@@ -92,7 +92,7 @@ describe ExpertSenderApi::API do
 
     its '#add_subscribers_to_list calls post with correct body' do
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(ExpertSenderApi::API::XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.MultiData {
             subscribers.each { |subscriber| subscriber.insert_to(xml) }
@@ -135,7 +135,7 @@ describe ExpertSenderApi::API do
     its '#create_and_send_email calls post with correct body' do
 
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(ExpertSenderApi::API::XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.Data {
             recipients.insert_to xml
@@ -154,7 +154,7 @@ describe ExpertSenderApi::API do
       letter_id = 93
 
       builder = Nokogiri::XML::Builder.new do |xml|
-        xml.ApiRequest {
+        xml.ApiRequest(ExpertSenderApi::API::XML_NAMESPACES) {
           xml.ApiKey api_key
           xml.Data {
             receiver.insert_to xml
