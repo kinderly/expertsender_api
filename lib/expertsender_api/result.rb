@@ -1,6 +1,7 @@
 module ExpertSenderApi
   class Result
     attr_reader :response, :parsed_response, :error_code, :error_message
+    SUCCESS_CODES = [200, 201, 202, 204].freeze
 
     def initialize(response)
       @response = response
@@ -28,9 +29,7 @@ module ExpertSenderApi
     end
 
     def status_success?
-      response.code == 200 or
-      response.code == 201 or
-      response.code == 202
+      SUCCESS_CODES.include?(response.code)
     end
   end
 end
