@@ -1,3 +1,5 @@
+require 'csv'
+
 module ExpertSenderApi
   class Result
     attr_reader :response, :parsed_response, :error_code, :error_message
@@ -7,11 +9,29 @@ module ExpertSenderApi
       @response = response
 
       if (@response.body)
-        @parsed_response = Nokogiri::XML(@response.body)
+        content_type = @response.headers['content-type']
 
-        if @parsed_response.xpath('//ErrorMessage').any?
-          @error_message = @parsed_response.xpath('//ErrorMessage/Message').text
-          @error_code = @parsed_response.xpath('//ErrorMessage/Code').text
+        if content_type.include?('xml')
+          @parsed_response = Nokogiri::XML(@response.body)
+
+          if @parsed_response.xpath('//ErrorMessage').any?
+            @error_message = @parsed_response.xpath('//ErrorMessage/Message').text
+            @error_code = @parsed_response.xpath('//ErrorMessage/Code').text
+          end
+        elsif content_type.include?('csv')
+          rows = CSV.parse(@response.body, row_sep: :auto)
+          header = rows.shift(1).first
+
+          @parsed_response = []
+          rows.each do |row|
+            hsh = {}
+
+            header.each_with_index do |column, i|
+              hsh[column.to_sym] = row[i]
+            end
+
+            @parsed_response << hsh
+          end
         end
       end
 

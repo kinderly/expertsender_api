@@ -27,6 +27,7 @@ module ExpertSenderApi
         @removed_subscribers_url = api_endpoint + '/Api/RemovedSubscribers'
         @newsletters_url = api_endpoint + '/Api/Newsletters'
         @transactionals_url = api_endpoint + '/Api/Transactionals'
+        @activities_url = api_endpoint + '/Api/Activities'
       end
     end
 
@@ -146,6 +147,20 @@ module ExpertSenderApi
       params[:endDate] = end_date.to_s unless end_date.nil?
 
       response = self.class.get(@removed_subscribers_url, query: params)
+
+      handle_response(response)
+    end
+
+    def get_activities(options = {})
+      params = { apiKey: api_key }
+
+      date =  options[:date]
+      type =  options[:type]
+
+      params[:date] = date.to_s unless date.nil?
+      params[:type] = type.to_s unless type.nil?
+
+      response = self.class.get(@activities_url, query: params)
 
       handle_response(response)
     end

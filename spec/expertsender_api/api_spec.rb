@@ -189,6 +189,17 @@ describe ExpertSenderApi::API do
                                       start_date: Date.today,
                                       end_date: Date.new(2090, 1, 1))
     end
+
+    its '#get_activities calls get with correct parameters' do
+      expected_params = { apiKey: api_key,
+                          date: Date.today.to_s,
+                          type: ExpertSenderApi::Activity::Clicks }
+
+      expect_get("#{api_endpoint}/Api/Activities", expected_params)
+
+      subject.get_activities(date: Date.today,
+                             type: ExpertSenderApi::Activity::Clicks)
+    end
   end
 
   context 'when has wrong api key' do
