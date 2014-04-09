@@ -11,7 +11,7 @@ module ExpertSenderApi
       if (@response.body)
         content_type = @response.headers['content-type']
 
-        if content_type.include?('xml')
+        if content_type.nil? || content_type.include?('xml')
           @parsed_response = Nokogiri::XML(@response.body)
 
           if @parsed_response.xpath('//ErrorMessage').any?
