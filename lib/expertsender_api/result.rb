@@ -39,8 +39,8 @@ module ExpertSenderApi
     end
 
     def success?
-      status_success? and
-      error_code.nil? and
+      status_success? &&
+      error_code.nil? &&
       error_message.nil?
     end
 
