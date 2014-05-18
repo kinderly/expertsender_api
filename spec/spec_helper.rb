@@ -1,5 +1,8 @@
 require 'rubygems'
 require 'bundler'
+require 'coveralls'
+
+Coveralls.wear!
 
 Bundler.setup(:default, :development)
 

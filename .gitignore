@@ -6,10 +6,11 @@
 
 # Ignore bundler config
 /.bundle
-/Gemfile.lock
 /gems
-/tags
+/.tags*
 /vendor/bundle
+/coverage
 
 *.swp
 .ruby-version
+*.sublime-*
