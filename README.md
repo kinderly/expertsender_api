@@ -25,3 +25,8 @@ If you desire to have the most up-do-date development version, add Git URL to th
 ```ruby
 gem 'expertsender_api', git: 'git@github.com:kinderly/expertsender_api.git'
 ```
+
+## Reporting Issues
+
+If you find a bug, missing feature or find any part of the API inconvenient, please [file an issue](https://github.com/kinderly/expertsender_api/issues/new). When filing an issue, please explain what behavior you expected and why.
+
