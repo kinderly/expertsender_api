@@ -23,7 +23,7 @@ gem 'expertsender_api'
 
 If you desire to have the most up-do-date development version, add Git URL to the Gemfile:
 ```ruby
-gem 'expertsender_api', git: 'git@github.com:kinderly/expertsender_api.git'
+gem 'expertsender_api', github: 'kinderly/expertsender_api'
 ```
 
 ## Supported Ruby Versions
