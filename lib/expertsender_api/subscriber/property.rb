@@ -6,6 +6,7 @@ module ExpertSenderApi::Subscriber
     TYPE_STRING = 'string'
     TYPE_DATE = 'date'
     TYPE_DATE_TIME = 'dateTime'
+    TYPE_BOOLEAN = 'boolean'
 
     def initialize(id: nil, value: nil, type: TYPE_STRING)
       @id = id
