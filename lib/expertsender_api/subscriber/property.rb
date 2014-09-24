@@ -8,6 +8,8 @@ module ExpertSenderApi::Subscriber
     TYPE_DATE_TIME = 'dateTime'
     TYPE_BOOLEAN = 'boolean'
 
+    DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+
     def initialize(id: nil, value: nil, type: TYPE_STRING)
       @id = id
       @value = value
