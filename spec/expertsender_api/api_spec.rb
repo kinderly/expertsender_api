@@ -8,6 +8,11 @@ describe ExpertSenderApi::API do
   let(:subscriber_attributes) { { id: 1, list_id: 52, email: "test@httplab.ru" } }
   let(:subscribers_url) { "#{api_endpoint}/Api/Subscribers" }
 
+  let(:data_table) { 'SeriesTest' }
+  let(:dt_entry) { [{ id: 1, name: 'TestName', email: 'test@httplab.ru' }, { id: 2, name: 'TestName_2', email: 'test_2@httplab.ru' }] }
+  let(:add_multiple_data_dt_url) { "#{api_endpoint}/Api/DataTablesAddMultipleRows" }
+  let(:clear_dt_url) { "#{api_endpoint}/Api/DataTablesClearTable" }
+
   let(:recipients) { ExpertSenderApi::Email::Recipients.new(recipients_attributes) }
   let(:recipients_attributes) { { subscriber_lists: [52, 53] } }
 
@@ -199,6 +204,37 @@ describe ExpertSenderApi::API do
 
       subject.get_activities(date: Date.today,
                              type: ExpertSenderApi::Activity::Clicks)
+    end
+
+
+    its '#add multiple data to data table call' do
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest(ExpertSenderApi::API::XML_NAMESPACES) do
+          xml.ApiKey api_key
+          xml.TableName data_table
+          xml.Data do
+            dt_entry.each { |row| subject.add_row_to_xml(row, xml) }
+          end
+        end
+      end
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+
+      expect_post(add_multiple_data_dt_url, xml)
+      subject.add_multi_data_to_tbl(data_table, dt_entry)
+    end
+
+    its '#clear data table calls' do
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.ApiRequest(ExpertSenderApi::API::XML_NAMESPACES) do
+          xml.ApiKey api_key
+          xml.TableName data_table
+        end
+      end
+
+      xml = builder.to_xml save_with: Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+
+      expect_post(clear_dt_url, xml)
+      subject.clear_tbl(data_table)
     end
   end
 
